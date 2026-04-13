@@ -187,6 +187,18 @@ void handle_mouse_abs_uart_msg(uart_packet_t *packet, device_t *state) {
     state->last_activity[BOARD_ROLE] = time_us_64();
 }
 
+/* Function handles received mouse position sync from the other board.
+   Updates the internal state but does not send the report to the host. */
+void handle_mouse_sync_uart_msg(uart_packet_t *packet, device_t *state) {
+    mouse_report_t *mouse_report = (mouse_report_t *)packet->data;
+
+    state->pointer_x       = mouse_report->x;
+    state->pointer_y       = mouse_report->y;
+    state->mouse_buttons   = mouse_report->buttons;
+
+    state->last_activity[BOARD_ROLE] = time_us_64();
+}
+
 /* Function handles request to switch output  */
 void handle_output_select_msg(uart_packet_t *packet, device_t *state) {
     state->active_output = packet->data[0];

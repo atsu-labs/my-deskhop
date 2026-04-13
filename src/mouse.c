@@ -126,6 +126,9 @@ void output_mouse_report(mouse_report_t *report, device_t *state) {
     if (CURRENT_BOARD_IS_ACTIVE_OUTPUT) {
         queue_mouse_report(report, state);
         state->last_activity[BOARD_ROLE] = time_us_64();
+
+        /* Notify the other board about the new mouse position */
+        queue_packet((uint8_t *)report, MOUSE_SYNC_MSG, MOUSE_REPORT_LENGTH);
     } else {
         queue_packet((uint8_t *)report, MOUSE_REPORT_MSG, MOUSE_REPORT_LENGTH);
     }
