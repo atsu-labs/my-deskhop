@@ -196,7 +196,7 @@ void handle_mouse_sync_uart_msg(uart_packet_t *packet, device_t *state) {
     state->pointer_y       = mouse_report->y;
     state->mouse_buttons   = mouse_report->buttons;
 
-    state->last_activity[BOARD_ROLE] = time_us_64();
+    state->last_activity[OTHER_ROLE] = time_us_64();
 }
 
 /* Function handles request to switch output  */
