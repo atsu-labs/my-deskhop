@@ -127,8 +127,12 @@ void output_mouse_report(mouse_report_t *report, device_t *state) {
         queue_mouse_report(report, state);
         state->last_activity[BOARD_ROLE] = time_us_64();
 
-        /* Notify the other board about the new mouse position */
-        queue_packet((uint8_t *)report, MOUSE_SYNC_MSG, MOUSE_REPORT_LENGTH);
+        /* Notify the other board about the new mouse position using absolute coordinates */
+        mouse_report_t sync_report = *report;
+        sync_report.x    = state->pointer_x;
+        sync_report.y    = state->pointer_y;
+        sync_report.mode = ABSOLUTE;
+        queue_packet((uint8_t *)&sync_report, MOUSE_SYNC_MSG, MOUSE_REPORT_LENGTH);
     } else {
         queue_packet((uint8_t *)report, MOUSE_REPORT_MSG, MOUSE_REPORT_LENGTH);
     }
@@ -179,6 +183,15 @@ void switch_to_another_pc(
     set_active_output(state, output_to);
     state->pointer_x = (direction == LEFT) ? MAX_SCREEN_COORD : MIN_SCREEN_COORD;
     state->pointer_y = scale_y_coordinate(output->number, 1 - output->number, state);
+
+    /* Sync the correct post-switch pointer position to the other board */
+    mouse_report_t sync_report = {
+        .x       = state->pointer_x,
+        .y       = state->pointer_y,
+        .buttons = state->mouse_buttons,
+        .mode    = ABSOLUTE,
+    };
+    queue_packet((uint8_t *)&sync_report, MOUSE_SYNC_MSG, MOUSE_REPORT_LENGTH);
 }
 
 void switch_virtual_desktop_macos(device_t *state, int direction) {
