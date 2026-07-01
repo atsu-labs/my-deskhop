@@ -94,6 +94,14 @@ float calculate_mouse_acceleration_factor(int32_t offset_x, int32_t offset_y) {
     return lower->factor + interpolation_pos * (upper->factor - lower->factor);
 }
 
+void update_mouse_buttons(device_t *state) {
+    int16_t combined_buttons = 0;
+    for (int i = 0; i < MAX_DEVICES; i++) {
+        combined_buttons |= state->local_mouse_buttons[i];
+    }
+    state->mouse_buttons = combined_buttons;
+}
+
 /* Returns LEFT if need to jump left, RIGHT if right, NONE otherwise */
 enum screen_pos_e update_mouse_position(device_t *state, mouse_values_t *values, uint8_t itf) {
     output_t *current    = &state->config.output[state->active_output];
@@ -119,12 +127,7 @@ enum screen_pos_e update_mouse_position(device_t *state, mouse_values_t *values,
     if (itf < MAX_DEVICES) {
         state->local_mouse_buttons[itf] = values->buttons;
     }
-
-    int16_t combined_buttons = 0;
-    for (int i = 0; i < MAX_DEVICES; i++) {
-        combined_buttons |= state->local_mouse_buttons[i];
-    }
-    state->mouse_buttons = combined_buttons;
+    update_mouse_buttons(state);
 
     return switch_direction;
 }

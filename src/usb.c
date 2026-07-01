@@ -153,11 +153,7 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
 
     if (device_idx < MAX_DEVICES) {
         global_state.local_mouse_buttons[device_idx] = 0;
-        int16_t combined_buttons = 0;
-        for (int i = 0; i < MAX_DEVICES; i++) {
-            combined_buttons |= global_state.local_mouse_buttons[i];
-        }
-        global_state.mouse_buttons = combined_buttons;
+        update_mouse_buttons(&global_state);
     }
 
     /* Also clear the interface structure, otherwise plugging something else later
