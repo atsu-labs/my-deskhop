@@ -95,7 +95,7 @@ float calculate_mouse_acceleration_factor(int32_t offset_x, int32_t offset_y) {
 }
 
 /* Returns LEFT if need to jump left, RIGHT if right, NONE otherwise */
-enum screen_pos_e update_mouse_position(device_t *state, mouse_values_t *values) {
+enum screen_pos_e update_mouse_position(device_t *state, mouse_values_t *values, uint8_t itf) {
     output_t *current    = &state->config.output[state->active_output];
     uint8_t reduce_speed = 0;
 
@@ -116,7 +116,15 @@ enum screen_pos_e update_mouse_position(device_t *state, mouse_values_t *values)
     state->pointer_y = move_and_keep_on_screen(state->pointer_y, offset_y);
 
     /* Update buttons state */
-    state->mouse_buttons = values->buttons;
+    if (itf < MAX_DEVICES) {
+        state->local_mouse_buttons[itf] = values->buttons;
+    }
+
+    int16_t combined_buttons = 0;
+    for (int i = 0; i < MAX_DEVICES; i++) {
+        combined_buttons |= state->local_mouse_buttons[i];
+    }
+    state->mouse_buttons = combined_buttons;
 
     return switch_direction;
 }
@@ -316,7 +324,7 @@ void extract_report_values(uint8_t *raw_report, int len, device_t *state, mouse_
 
 mouse_report_t create_mouse_report(device_t *state, mouse_values_t *values) {
     mouse_report_t mouse_report = {
-        .buttons = values->buttons,
+        .buttons = state->mouse_buttons,
         .x       = state->pointer_x,
         .y       = state->pointer_y,
         .wheel   = values->wheel,
@@ -342,7 +350,7 @@ void process_mouse_report(uint8_t *raw_report, int len, uint8_t itf, hid_interfa
     extract_report_values(raw_report, len, state, &values, iface);
 
     /* Calculate and update mouse pointer movement. */
-    enum screen_pos_e switch_direction = update_mouse_position(state, &values);
+    enum screen_pos_e switch_direction = update_mouse_position(state, &values, itf);
 
     /* Create the report for the output PC based on the updated values */
     mouse_report_t report = create_mouse_report(state, &values);

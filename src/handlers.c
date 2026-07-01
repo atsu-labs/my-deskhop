@@ -182,7 +182,13 @@ void handle_mouse_abs_uart_msg(uart_packet_t *packet, device_t *state) {
 
     state->pointer_x       = mouse_report->x;
     state->pointer_y       = mouse_report->y;
-    state->mouse_buttons   = mouse_report->buttons;
+
+    state->local_mouse_buttons[MAX_DEVICES - 1] = mouse_report->buttons;
+    int16_t combined_buttons = 0;
+    for (int i = 0; i < MAX_DEVICES; i++) {
+        combined_buttons |= state->local_mouse_buttons[i];
+    }
+    state->mouse_buttons = combined_buttons;
 
     state->last_activity[BOARD_ROLE] = time_us_64();
 }
@@ -194,7 +200,13 @@ void handle_mouse_sync_uart_msg(uart_packet_t *packet, device_t *state) {
 
     state->pointer_x       = mouse_report->x;
     state->pointer_y       = mouse_report->y;
-    state->mouse_buttons   = mouse_report->buttons;
+
+    state->local_mouse_buttons[MAX_DEVICES - 1] = mouse_report->buttons;
+    int16_t combined_buttons = 0;
+    for (int i = 0; i < MAX_DEVICES; i++) {
+        combined_buttons |= state->local_mouse_buttons[i];
+    }
+    state->mouse_buttons = combined_buttons;
 
     state->last_activity[OTHER_ROLE] = time_us_64();
 }
