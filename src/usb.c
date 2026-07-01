@@ -137,6 +137,25 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
             break;
     }
 
+    // Clear mouse buttons for this device index to prevent stuck buttons
+    uint8_t device_idx;
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
+        if (dev_addr == global_state.kbd_dev_addr && instance == global_state.kbd_instance) {
+            device_idx = 0;
+        } else {
+            device_idx = (MAX_DEVICES - 2);
+        }
+    } else if (itf_protocol == HID_ITF_PROTOCOL_MOUSE) {
+        device_idx = 1;
+    } else {
+        device_idx = (dev_addr - 1) % (MAX_DEVICES - 1);
+    }
+
+    if (device_idx < MAX_DEVICES) {
+        global_state.local_mouse_buttons[device_idx] = 0;
+        update_mouse_buttons(&global_state);
+    }
+
     /* Also clear the interface structure, otherwise plugging something else later
        might be a fun (and confusing) experience */
     memset(iface, 0, sizeof(hid_interface_t));

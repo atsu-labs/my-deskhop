@@ -106,6 +106,7 @@ typedef struct {
 
     int16_t pointer_x; // Store and update the location of our mouse pointer
     int16_t pointer_y;
+    int16_t local_mouse_buttons[MAX_DEVICES]; // Store mouse buttons per device
     int16_t mouse_buttons; // Store and update the state of mouse buttons
 
     config_t config;       // Device configuration, loaded from flash or defaults used
