@@ -216,6 +216,12 @@ void handle_output_select_msg(uart_packet_t *packet, device_t *state) {
     if (state->tud_connected)
         release_all_keys(state);
 
+    /* Clear the remote-device button slot to discard any stale button state
+       that was accumulated via handle_mouse_abs_uart_msg while this board was
+       the active output forwarding the other board's mouse reports to its host. */
+    state->local_mouse_buttons[MAX_DEVICES - 1] = 0;
+    update_mouse_buttons(state);
+
     restore_leds(state);
 }
 
