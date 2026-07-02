@@ -196,11 +196,16 @@ void handle_mouse_abs_uart_msg(uart_packet_t *packet, device_t *state) {
 void handle_mouse_sync_uart_msg(uart_packet_t *packet, device_t *state) {
     mouse_report_t *mouse_report = (mouse_report_t *)packet->data;
 
-    state->pointer_x       = mouse_report->x;
-    state->pointer_y       = mouse_report->y;
+    state->pointer_x = mouse_report->x;
+    state->pointer_y = mouse_report->y;
 
-    state->local_mouse_buttons[MAX_DEVICES - 1] = mouse_report->buttons;
-    update_mouse_buttons(state);
+    /* Do NOT update button state from sync messages.
+       Button state is authoritatively tracked by the local HID device reports.
+       Writing remote button state here causes a feedback loop: when the user
+       releases a button, the local slot clears but the remote-sync slot retains
+       the pressed value, so update_mouse_buttons() (which ORs all slots) never
+       clears the combined state.  The stale value is then re-synced back,
+       creating a permanent "button stuck" condition. */
 
     state->last_activity[OTHER_ROLE] = time_us_64();
 }
@@ -409,4 +414,9 @@ void set_active_output(device_t *state, uint8_t new_output) {
     /* If we were holding a key down and drag the mouse to another screen, the key gets stuck.
        Changing outputs = no more keypresses on the previous system. */
     release_all_keys(state);
+
+    /* Clear the remote-device button slot so stale button state from the previous
+       active output cannot linger after a switch. */
+    state->local_mouse_buttons[MAX_DEVICES - 1] = 0;
+    update_mouse_buttons(state);
 }
